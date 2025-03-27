@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename= 'favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename= 'favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename= 'favicon/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename= 'favicon/site.webmanifest') }}">
+    
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename= 'css/dashboard.css') }}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    
+    <!-- JS Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0/dist/chartjs-adapter-moment.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    
+    <title>Repository Health Dashboard - Augur</title>
+</head>
+
+<body class="dashboard-body">
+    <div class="container-fluid h-100 d-flex flex-column fixed-top">
+        <div class="row flex-fill">
+            <!-- Sidebar -->
+            <div class="d-flex flex-column p-3 text-white dashboard-sidebar mh-100">
+                <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="me-2" style="width: 30px;">
+                    <span class="fs-4">Repository Health</span>
+                </div>
+                <hr>
+                <!-- Advanced Filters -->
+                <div class="filter-section mb-3">
+                    <div class="date-filter mb-3">
+                        <select id="date-preset" class="form-control-sm mb-2">
+                            <option value="custom">Custom Range</option>
+                            <option value="week">Last Week</option>
+                            <option value="month">Last Month</option>
+                            <option value="quarter">Last Quarter</option>
+                            <option value="year">Last Year</option>
+                        </select>
+                        <div id="custom-date-range">
+                            <input type="date" id="start-date" class="form-control-sm">
+                            <input type="date" id="end-date" class="form-control-sm">
+                        </div>
+                    </div>
+                    <div class="repo-compare mb-3">
+                        <select id="compare-repo" class="form-control-sm" multiple data-placeholder="Compare repositories...">
+                            <option value="">Select repositories to compare</option>
+                        </select>
+                    </div>
+                    <div class="metric-filter mb-3">
+                        <div class="input-group">
+                            <input type="text" id="metric-search" class="form-control-sm" placeholder="Search metrics...">
+                            <button class="btn btn-sm btn-outline-light" id="metric-builder" data-tooltip="Create custom metric">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="refresh-btn w-100" id="apply-filter" data-tooltip="Update dashboard with selected filters">
+                        <i class="fas fa-sync-alt"></i> Update Dashboard
+                    </button>
+                </div>
+                <ul class="nav nav-pills flex-column mb-auto" id="nav-list">
+                    <li class="nav-item">
+                        <a href="#overview" class="nav-link active" data-tooltip="Repository overview and key metrics">
+                            <i class="fas fa-home me-2"></i>Overview
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#activity" class="nav-link text-white" data-tooltip="Commit, PR, and issue activity">
+                            <i class="fas fa-chart-line me-2"></i>Activity Metrics
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#community" class="nav-link text-white" data-tooltip="Community engagement and growth">
+                            <i class="fas fa-users me-2"></i>Community
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#code" class="nav-link text-white" data-tooltip="Code quality and distribution">
+                            <i class="fas fa-code me-2"></i>Code Analysis
+                        </a>
+                    </li>
+                </ul>
+                <!-- Mobile menu toggle -->
+                <button class="btn btn-link text-white d-md-none position-fixed" style="top: 10px; right: 10px;" id="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12 mb-3 content-column mh-100">
+                <!-- Overview Section -->
+                <section id="overview">
+                    <h1>Overview</h1>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card dashboard-content">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-info-circle me-2"></i>Repository Summary
+                                        <button class="refresh-btn float-end" data-tooltip="Refresh data">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </h5>
+                                    <div id="repo-summary">
+                                        <div class="loading-spinner d-none"></div>
+                                        <div class="summary-content">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <i class="fas fa-code-branch me-2"></i>
+                                                <span><strong>Name:</strong> {{ repo.name }}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <i class="fas fa-star me-2"></i>
+                                                <span><strong>Stars:</strong> {{ repo.stars }}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <i class="fas fa-code-branch me-2"></i>
+                                                <span><strong>Forks:</strong> {{ repo.forks }}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-exclamation-circle me-2"></i>
+                                                <span><strong>Open Issues:</strong> {{ repo.open_issues }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card dashboard-content">
+                                <div class="card-body">
+                                    <h5 class="card-title">Health Score</h5>
+                                    <canvas id="health-score-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Activity Section -->
+                <section id="activity">
+                    <h1>Activity Metrics</h1>
+                    <div class="card dashboard-content">
+                        <div class="card-body">
+                            <div class="chart-controls mb-3">
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-light" data-chart-type="line">
+                                        <i class="fas fa-chart-line"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-light" data-chart-type="bar">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-light" data-chart-type="area">
+                                        <i class="fas fa-chart-area"></i>
+                                    </button>
+                                </div>
+                                <div class="btn-group ms-2">
+                                    <button class="btn btn-sm btn-outline-light" id="export-png" data-tooltip="Export as PNG">
+                                        <i class="fas fa-image"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-light" id="export-pdf" data-tooltip="Export as PDF">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </button>
+                                </div>
+                                <div class="btn-group ms-2">
+                                    <button class="btn btn-sm btn-outline-light" id="zoom-in" data-tooltip="Zoom In">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-light" id="zoom-out" data-tooltip="Zoom Out">
+                                        <i class="fas fa-search-minus"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-light" id="reset-zoom" data-tooltip="Reset Zoom">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h5>Commit Activity</h5>
+                                    <canvas id="commit-activity-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h5>Pull Requests</h5>
+                                    <canvas id="pr-metrics-chart"></canvas>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>Issue Activity</h5>
+                                    <canvas id="issue-metrics-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Community Section -->
+                <section id="community">
+                    <h1>Community</h1>
+                    <div class="card dashboard-content">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5>Contributor Growth</h5>
+                                    <canvas id="contributor-growth-chart"></canvas>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>Response Times</h5>
+                                    <canvas id="response-times-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Code Analysis Section -->
+                <section id="code">
+                    <h1>Code Analysis</h1>
+                    <div class="card dashboard-content">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h5>Code Changes Over Time</h5>
+                                    <canvas id="code-changes-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h5>Language Distribution</h5>
+                                    <canvas id="language-dist-chart"></canvas>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>Code Quality Metrics</h5>
+                                    <canvas id="code-quality-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Navigation highlighting
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Sample chart initialization (to be replaced with real data)
+        function initCharts() {
+            // Health Score Chart
+            new Chart(document.getElementById('health-score-chart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Activity', 'Community', 'Code Quality'],
+                    datasets: [{
+                        data: [80, 65, 90],
+                        backgroundColor: ['#6f42c1', '#00ddff', '#28a745']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // More charts would be initialized here with real data
+        }
+
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', initCharts);
+    </script>
+</body>
+</html>
