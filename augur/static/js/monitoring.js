@@ -70,10 +70,10 @@ class AugurMonitoring {
 
     trackPageLoadMetrics() {
         window.addEventListener('load', () => {
-            const timing = performance.timing;
+            const navigationEntry = performance.getEntriesByType('navigation')[0];
             const metrics = {
-                pageLoadTime: timing.loadEventEnd - timing.navigationStart,
-                domLoadTime: timing.domComplete - timing.domLoading,
+                pageLoadTime: navigationEntry.loadEventEnd - navigationEntry.startTime,
+                domLoadTime: navigationEntry.domComplete - navigationEntry.domLoading,
                 firstPaint: performance.getEntriesByType('paint')[0]?.startTime,
                 firstContentfulPaint: performance.getEntriesByType('paint')[1]?.startTime
             };
