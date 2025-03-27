@@ -11,6 +11,12 @@
     <link rel="manifest" href="{{ url_for('static', filename= 'favicon/site.webmanifest') }}">
     
     <!-- CSS Dependencies -->
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" as="style">
+    <link rel="preload" href="{{ url_for('static', filename= 'css/dashboard.css') }}" as="style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js" as="script">
+    
+    <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename= 'css/dashboard.css') }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.css" rel="stylesheet">
@@ -151,7 +157,10 @@
                     <h1>Activity Metrics</h1>
                     <div class="card dashboard-content">
                         <div class="card-body">
-                            <div class="chart-controls mb-3">
+                            <!-- Lazy loading container with loading indicator -->
+            <div class="chart-container" data-chart-type="activity">
+                <div class="loading-spinner d-none"></div>
+                <div class="chart-controls mb-3">
                                 <div class="btn-group">
                                     <button class="btn btn-sm btn-outline-light" data-chart-type="line">
                                         <i class="fas fa-chart-line"></i>
@@ -250,8 +259,27 @@
         </div>
     </div>
 
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Deferred non-critical scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" defer></script>
+    
+    <!-- Performance monitoring -->
+    <script>
+        // Performance monitoring
+        if (window.performance) {
+            const timing = window.performance.timing;
+            window.addEventListener('load', () => {
+                console.log('Page Load Time:', timing.loadEventEnd - timing.navigationStart + 'ms');
+                console.log('DOM Load Time:', timing.domComplete - timing.domLoading + 'ms');
+            });
+        }
+
+        // Register service worker for caching
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => console.log('ServiceWorker registered'))
+                .catch(error => console.log('ServiceWorker registration failed:', error));
+        }
+    </script>
     
     <!-- Custom JS -->
     <script>

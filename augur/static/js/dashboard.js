@@ -1,3 +1,48 @@
+// Cache management
+const cache = {
+    data: new Map(),
+    timeout: 5 * 60 * 1000, // 5 minutes cache timeout
+    set: function(key, value) {
+        this.data.set(key, {
+            value,
+            timestamp: Date.now()
+        });
+    },
+    get: function(key) {
+        const item = this.data.get(key);
+        if (!item) return null;
+        if (Date.now() - item.timestamp > this.timeout) {
+            this.data.delete(key);
+            return null;
+        }
+        return item.value;
+    }
+};
+
+// Lazy loading observer
+const lazyLoadObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const chartElement = entry.target;
+            loadChartData(chartElement);
+            observer.unobserve(chartElement);
+        }
+    });
+});
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize date presets
     const datePreset = document.getElementById('date-preset');
@@ -292,5 +337,17 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`Updating charts for date range: ${startDate} to ${endDate}`);
     }
 
-    initializeCharts();
+    // Initialize lazy loading for charts
+    document.querySelectorAll('.chart-container').forEach(container => {
+        lazyLoadObserver.observe(container);
+    });
+
+    // Initialize charts that are in viewport
+    const visibleCharts = document.querySelectorAll('.chart-container:not(.loaded)');
+    visibleCharts.forEach(chart => {
+        if (isElementInViewport(chart)) {
+            loadChartData(chart);
+            chart.classList.add('loaded');
+        }
+    });
 });
