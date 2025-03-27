@@ -134,6 +134,15 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('Error refreshing data. Please try again.');
         } finally {
             spinner.classList.add('d-none');
+        
+        // Track performance
+        const endTime = performance.now();
+        window.augurMonitoring.trackPerformance({
+            type: 'chart_load',
+            chartId,
+            duration: endTime - startTime,
+            success: !error
+        });
             content.style.opacity = '1';
         }
     }, 300);
@@ -332,6 +341,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to update charts with new date range
     function updateCharts(startDate, endDate) {
+    window.augurMonitoring.trackInteraction({
+        type: 'date_range_update',
+        startDate,
+        endDate
+    });
         // Implementation for updating charts with new date range
         // This would typically involve API calls to fetch new data
         console.log(`Updating charts for date range: ${startDate} to ${endDate}`);

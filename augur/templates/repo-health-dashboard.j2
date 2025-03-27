@@ -27,6 +27,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0/dist/chartjs-adapter-moment.min.js"></script>
+    <script src="{{ url_for('static', filename='js/monitoring.js') }}"></script>
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     
     <title>Repository Health Dashboard - Augur</title>
@@ -75,6 +76,11 @@
                     </button>
                 </div>
                 <ul class="nav nav-pills flex-column mb-auto" id="nav-list">
+                    <li class="nav-item">
+                        <a href="#monitoring" class="nav-link text-white" data-tooltip="System monitoring and performance">
+                            <i class="fas fa-chart-line me-2"></i>Monitoring
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a href="#overview" class="nav-link active" data-tooltip="Repository overview and key metrics">
                             <i class="fas fa-home me-2"></i>Overview
@@ -255,6 +261,77 @@
                         </div>
                     </div>
                 </section>
+            </div>
+
+            <!-- Monitoring Dashboard -->
+            <section id="monitoring" class="d-none">
+                <h1>System Monitoring</h1>
+                <div class="row">
+                    <!-- Performance Metrics -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card dashboard-content">
+                            <div class="card-body">
+                                <h5 class="card-title">Performance Metrics</h5>
+                                <div class="performance-metrics">
+                                    <div class="metric-item">
+                                        <span class="metric-label">Page Load Time:</span>
+                                        <span class="metric-value" id="page-load-time">-</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Average API Response:</span>
+                                        <span class="metric-value" id="avg-api-time">-</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Cache Hit Rate:</span>
+                                        <span class="metric-value" id="cache-hit-rate">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Tracking -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card dashboard-content">
+                            <div class="card-body">
+                                <h5 class="card-title">Error Log</h5>
+                                <div class="error-log" id="error-log">
+                                    <div class="text-muted">No errors recorded</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Health -->
+                    <div class="col-md-12 mb-4">
+                        <div class="card dashboard-content">
+                            <div class="card-body">
+                                <h5 class="card-title">System Health</h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="health-metric">
+                                            <h6>API Health</h6>
+                                            <div class="health-indicator" id="api-health">✓</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="health-metric">
+                                            <h6>Cache Status</h6>
+                                            <div class="health-indicator" id="cache-health">✓</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="health-metric">
+                                            <h6>Service Worker</h6>
+                                            <div class="health-indicator" id="sw-health">✓</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
             </div>
         </div>
     </div>
