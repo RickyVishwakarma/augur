@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
 
 jobs:
 
@@ -25,7 +25,7 @@ jobs:
         do
             CONTAINER=$(basename $i)
             echo "Building $CONTAINER"
-            export IMAGE=${LOGIN,,}/augur_${CONTAINER,,}
+            export IMAGE=$(echo "${LOGIN,,}/augur_${CONTAINER,,}" | tr '[:upper:]' '[:lower:]')
             DOCKERFILE=docker/$CONTAINER/Dockerfile
             docker build . -f $DOCKERFILE --tag ghcr.io/${IMAGE}:latest
             docker push ghcr.io/${IMAGE}:latest
