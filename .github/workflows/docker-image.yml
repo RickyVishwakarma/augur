@@ -1,0 +1,32 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: |
+        set -ex
+        export LOGIN=${{ github.actor }}
+        echo "***"
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $LOGIN --password-stdin
+        
+        for i in docker/*
+        do
+            CONTAINER=$(basename $i)
+            echo "Building $CONTAINER"
+            export IMAGE=${LOGIN,,}/augur_${CONTAINER,,}
+            DOCKERFILE=docker/$CONTAINER/Dockerfile
+            docker build . -f $DOCKERFILE --tag ghcr.io/${IMAGE}:latest
+            docker push ghcr.io/${IMAGE}:latest
+        done

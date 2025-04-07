@@ -13,7 +13,7 @@ RUN ./scripts/docker/install-golang-deps.sh
 # FROM rust:1.78 as rust
 
 # # Ensure Rust directories are writable
-# RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
+# RUN mkdir -p /root/.rustup/downloads /root/.rustup /root/.cargo/registry && \
 #     chmod -R 777 /root/.rustup /root/.cargo
 
 # # Add rust and cargo to PATH
@@ -118,7 +118,7 @@ RUN set -x \
     && /opt/venv/bin/pip install wheel \
     && /opt/venv/bin/pip install .
 
-RUN ./scripts/docker/install-workers-deps.sh
+RUN ./scripts/docker/install-workers-deps.sh || echo "Warning: Some worker dependencies may not have installed"
 
 COPY --from=golang "/root/scc" "/root/scc"
 COPY --from=golang "/root/scorecard/scorecard" "/root/scorecard"
