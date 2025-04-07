@@ -32,7 +32,7 @@ RUN ./scripts/docker/install-golang-deps.sh
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.85.3"
+LABEL version="0.86.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
@@ -121,7 +121,7 @@ RUN set -x \
 RUN ./scripts/docker/install-workers-deps.sh
 
 COPY --from=golang "/root/scc" "/root/scc"
-COPY --from=golang "/root/scorecard/scorecard" "./scorecard"
+COPY --from=golang "/root/scorecard/scorecard" "/root/scorecard"
 
 # RUN ./scripts/install/workers.sh 
 
@@ -133,3 +133,5 @@ RUN chmod +x /entrypoint.sh /init.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 #ENTRYPOINT ["/entrypoint.sh"]
 CMD /init.sh
+
+
